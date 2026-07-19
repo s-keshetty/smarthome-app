@@ -1,8 +1,8 @@
 # Smart Home and Homelab Management System
 
-A web-based application for monitoring and managing consumer smart home devices and self-hosted homelab infrastructure from a single dashboard. Users can track device health, server uptime, storage utilization, network bandwidth, and camera status, receive alerts when thresholds are crossed, review an activity log, and define basic automation rules.
+This is a small web app for keeping an eye on a home lab and smart-home devices in one place. It has a dashboard, device list, alerts, activity log, and basic automation rules.
 
-This is a proof-of-concept built for a Master's software engineering project. Device readings are currently simulated by a monitoring poller rather than pulled from live device hardware.
+It was built as a Master's software engineering project. The monitoring poller currently generates sample readings, so it does not connect to physical devices yet.
 
 ## Tech Stack
 
@@ -28,7 +28,7 @@ smarthome-app/
 │       │   └── poller.js       # 60s monitoring cycle + alert logic
 │       └── routes/
 │           ├── auth.js         # register, login, /me
-│           ├── devices.js      # list, add, delete, device detail
+│           ├── devices.js      # list, add, edit, delete, device detail
 │           ├── dashboard.js    # aggregated summary
 │           ├── alerts.js       # list, resolve
 │           ├── logs.js         # activity feed
@@ -66,7 +66,7 @@ cd smarthome-app
 
 ### 2. Configure the backend environment
 
-Create a file at `backend/.env` with the following values. **This file is gitignored and must never be committed.**
+Create `backend/.env` with the following values. This file is ignored by Git; keep it that way.
 
 ```
 PORT=4000
@@ -81,7 +81,7 @@ JWT_EXPIRES_IN=1d
 
 ### 3. Set up the database
 
-In the Supabase SQL editor, run the contents of `backend/db/schema.sql`. This creates the six tables: `users`, `devices`, `metric_readings`, `alerts`, `event_logs`, and `automation_rules`.
+In the Supabase SQL editor, run `backend/db/schema.sql`. It creates the tables used by the app: `users`, `devices`, `metric_readings`, `alerts`, `event_logs`, and `automation_rules`.
 
 ### 4. Install dependencies
 
@@ -118,11 +118,11 @@ Register a normal account through the app, then promote it to admin by running t
 UPDATE users SET role='admin' WHERE email='your@email.com';
 ```
 
-Admin accounts can add and remove devices and manage the system; standard users can view dashboards and receive alerts.
+Admins can add, edit, and remove devices. Standard users can view the dashboard and alerts.
 
 ## How It Works
 
-Once devices are added, the backend poller runs every 60 seconds. For each device it generates a reading based on the device type (uptime for servers, storage for NAS, online status for cameras, bandwidth for network gear), stores the reading, updates the device's status, and raises an alert if a threshold is crossed (for example, storage above 80% or a device going offline). All significant events are written to the activity log.
+The backend poller runs every 60 seconds. It creates a reading for each device based on its type: uptime for servers, storage for NAS devices, online status for cameras, and bandwidth for network gear. It saves the reading, updates the device status, and creates an alert when a threshold is crossed. Important actions also appear in the activity log.
 
 ## Requirement Coverage
 
@@ -134,13 +134,13 @@ Once devices are added, the backend poller runs every 60 seconds. For each devic
 | FR-4–FR-8 | Uptime, bandwidth, storage, camera monitoring, and alerting (poller) |
 | FR-9 | Activity logging |
 | FR-11 | Automation rules |
-| FR-12 | Device management and device detail view |
+| FR-12 | Add, edit, remove, and view device details |
 
 ## Status
 
-**Implemented:** authentication, RBAC, dashboard, monitoring/alerting, logging, automation, device management.
+Implemented: authentication, role-based access, dashboard, simulated monitoring and alerts, activity logging, automation rules, and device management.
 
-**Planned:** deployment to Render (backend) and Vercel (frontend), remote access (FR-10), admin user-management screen, federated login, live device integration, and automated tests.
+Still to do: deploy the backend and frontend, connect to live devices, add automated tests, and complete the remaining optional features such as federated login.
 
 ## Authors
 

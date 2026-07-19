@@ -9,6 +9,8 @@ const inp = { width: "100%", padding: "9px 12px", border: "1px solid #d1d5db", b
 export default function Devices() {
   const [devices, setDevices] = useState([]);
   const [form, setForm] = useState({ name: "", type: "server", url: "" });
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ name: "", type: "server", url: "" });
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const isAdmin = localStorage.getItem("role") === "admin";
@@ -37,6 +39,27 @@ export default function Devices() {
     catch { setError("Could not delete device"); }
   }
 
+  function startEdit(device) {
+    setError(""); setSuccess("");
+    setEditingId(device.id);
+    setEditForm({ name: device.name, type: device.type, url: device.api_config?.url || "" });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditForm({ name: "", type: "server", url: "" });
+  }
+
+  async function handleEdit(e) {
+    e.preventDefault(); setError(""); setSuccess("");
+    try {
+      const payload = { name: editForm.name, type: editForm.type, api_config: { url: editForm.url } };
+      await api.put(`/devices/${editingId}`, payload);
+      cancelEdit();
+      setSuccess("Device updated!"); load();
+    } catch (err) { setError(err.response?.data?.error || "Could not update device"); }
+  }
+
   const statusC = s => s === "online" ? "#16a34a" : s === "offline" ? "#dc2626" : "#94a3b8";
 
   return (
@@ -58,7 +81,21 @@ export default function Devices() {
             {devices.length === 0 && (
               <tr><td colSpan={5} style={{ padding: 24, color: "#94a3b8", textAlign: "center" }}>No devices yet.</td></tr>
             )}
-            {devices.map(d => (
+            {devices.map(d => editingId === d.id ? (
+              <tr key={d.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                <td colSpan={5} style={{ padding: "12px 16px" }}>
+                  <form onSubmit={handleEdit} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr auto auto", gap: 8, alignItems: "center" }}>
+                    <input style={inp} value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} aria-label="Device name" required />
+                    <select style={inp} value={editForm.type} onChange={e => setEditForm(f => ({ ...f, type: e.target.value }))} aria-label="Device type">
+                      {TYPES.map(t => <option key={t}>{t}</option>)}
+                    </select>
+                    <input style={inp} value={editForm.url} onChange={e => setEditForm(f => ({ ...f, url: e.target.value }))} aria-label="API URL" placeholder="API URL (optional)" />
+                    <button type="submit" style={{ fontSize: 13, padding: "8px 12px", background: "#2563eb", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}>Save</button>
+                    <button type="button" onClick={cancelEdit} style={{ fontSize: 13, padding: "8px 12px", background: "#e5e7eb", color: "#374151", border: "none", borderRadius: 6, cursor: "pointer" }}>Cancel</button>
+                  </form>
+                </td>
+              </tr>
+            ) : (
               <tr key={d.id} style={{ borderBottom: "1px solid #f1f5f9" }}>
                 <td style={{ padding: "12px 16px" }}>
                   {/* Clickable name goes to device detail */}
@@ -74,6 +111,9 @@ export default function Devices() {
                 <td style={{ padding: "12px 16px", fontSize: 13, color: "#94a3b8" }}>{new Date(d.created_at).toLocaleDateString()}</td>
                 {isAdmin && (
                   <td style={{ padding: "12px 16px" }}>
+                    <button onClick={() => startEdit(d)} style={{ fontSize: 13, padding: "5px 12px", background: "#dbeafe", color: "#1d4ed8", border: "none", borderRadius: 6, cursor: "pointer", marginRight: 8 }}>
+                      Edit
+                    </button>
                     <button onClick={() => handleDelete(d.id, d.name)} style={{ fontSize: 13, padding: "5px 12px", background: "#fee2e2", color: "#dc2626", border: "none", borderRadius: 6, cursor: "pointer" }}>
                       Delete
                     </button>

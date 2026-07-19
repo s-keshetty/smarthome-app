@@ -8,7 +8,7 @@ router.use(requireAuth);
 // List all devices
 router.get("/", async (req, res) => {
   const result = await pool.query(
-    "SELECT id, name, type, status, created_at FROM devices ORDER BY name"
+    "SELECT id, name, type, status, api_config, created_at FROM devices ORDER BY name"
   );
   res.json(result.rows);
 });
@@ -61,6 +61,29 @@ router.post("/", requireRole("admin"), async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Could not add device" });
+  }
+});
+
+// Update a device - admin only
+router.put("/:id", requireRole("admin"), async (req, res) => {
+  const { name, type, api_config } = req.body;
+  const valid = ["server", "nas", "camera", "network"];
+  if (!name || !valid.includes(type))
+    return res.status(400).json({ error: "name required, type must be server/nas/camera/network" });
+  try {
+    const result = await pool.query(
+      `UPDATE devices SET name=$1, type=$2, api_config=$3 WHERE id=$4 RETURNING *`,
+      [name, type, api_config || {}, req.params.id]
+    );
+    if (!result.rows[0]) return res.status(404).json({ error: "Device not found" });
+    await pool.query(
+      `INSERT INTO event_logs (source, event_type, description) VALUES ($1,$2,$3)`,
+      ["user", "device_updated", `Device updated: ${name} (${type}) by ${req.user.username}`]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Could not update device" });
   }
 });
 
