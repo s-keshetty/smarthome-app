@@ -1,14 +1,16 @@
 require("dotenv").config();
 const express = require("express");
-app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
+const cors = require("cors");
 const { startPoller } = require("./jobs/poller");
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: "*",
+  methods: ["GET","POST","PUT","PATCH","DELETE"],
+  allowedHeaders: ["Content-Type","Authorization"]
+}));
+
 app.use(express.json());
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
@@ -18,7 +20,7 @@ app.use("/api/dashboard",  require("./routes/dashboard"));
 app.use("/api/alerts",     require("./routes/alerts"));
 app.use("/api/logs",       require("./routes/logs"));
 app.use("/api/automation", require("./routes/automation"));
-app.use("/api/users",      require("./routes/users")); // NEW - admin user management
+app.use("/api/users",      require("./routes/users"));
 
 app.use((req, res) => res.status(404).json({ error: "Not found" }));
 app.use((err, req, res, next) => { console.error(err); res.status(500).json({ error: "Server error" }); });
