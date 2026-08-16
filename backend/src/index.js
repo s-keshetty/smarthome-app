@@ -1,6 +1,10 @@
 require("dotenv").config();
 const express = require("express");
-const cors = require("cors");
+app.use(cors({
+  origin: "*",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 const { startPoller } = require("./jobs/poller");
 
 const app = express();
