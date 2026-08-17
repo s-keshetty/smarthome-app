@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({ 
-  baseURL: import.meta.env.VITE_API_URL || "/api" 
+  baseURL: "https://smarthome-backend-5am3.onrender.com/api"
 });
 
 api.interceptors.request.use((config) => {
@@ -21,4 +21,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+export default api;s
